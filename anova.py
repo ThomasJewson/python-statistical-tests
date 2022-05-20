@@ -1,4 +1,5 @@
 # %%
+from logging import critical
 import pandas as pd
 import numpy as np
 
@@ -71,12 +72,35 @@ marj_ind["variance_within"] = marj_ind.groupby("marijUse")["party"].apply(
 ssw = marj_ind["variance_within"].sum()
 ssw
 
-ssb = ((
-    (marj_ind.groupby("marijUse")["party"].mean() - grand_mean) ** 2
-) * marj_ind.groupby("marijUse")["party"].count()).sum()
+ssb = (
+    ((marj_ind.groupby("marijUse")["party"].mean() - grand_mean) ** 2)
+    * marj_ind.groupby("marijUse")["party"].count()
+).sum()
 ssb
 
-ssb = sst - ssw 
+ssb = sst - ssw
+
+# %% Hypothesis testing
+# H0 = Population means are equal
+# H1 = Not all population means are equal
+
+num_groups = marj_ind["marijUse"].nunique()
+num_observations = len(marj_ind)
+
+dof_within = num_observations - num_groups
+dof_between_groups = num_groups - 1
+
+f_stat = (ssb / dof_between_groups) / (ssw / dof_within)
+f_stat
 
 # %%
-sst - ssw 
+import scipy.stats
+
+# find F critical value
+critical_f = scipy.stats.f.ppf(q=1 - 0.05, dfn=dof_between_groups, dfd=dof_within)
+critical_f
+
+if f_stat > critical_f:
+    print("reject H0")
+else:
+    print("cannot reject H0")
