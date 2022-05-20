@@ -1,10 +1,7 @@
-# %%
-from logging import critical
+# %% 1. Setup
 import pandas as pd
 import numpy as np
-
-#%%
-MARJ_IND_LOC = R"https://raw.githubusercontent.com/ThomasJewson/datasets/master/MarijuanaUsePartying/marij1_indiv.csv"
+import scipy.stats
 
 """
 Description: Frequency of Marijuana use and Party/Dance Participation
@@ -17,42 +14,11 @@ party       /* 1=Not at all,  2=Somewhat, 3=A great Deal */
 numStdnt
 """
 
-# %%
-# Use one-way ANOVA to test whether going to more partys makes it more
-# likely that you will use marj
-
-# one level therefore use one-way
-
-# I am studying what affect going to more partys has on Marj use.
-
-# dependent variable is party
-# independent variable is marijUse7
-
+MARJ_IND_LOC = R"https://raw.githubusercontent.com/ThomasJewson/datasets/master/MarijuanaUsePartying/marij1_indiv.csv"
 marj_ind = pd.read_csv(MARJ_IND_LOC)
 
-# marj_ind["score"] = marj_ind["marijUse"]
-marj_ind["count"] = marj_ind["marijUse"]
-marj = marj_ind.groupby(["party", "marijUse"]).agg({"count": np.sum})
-marj
+# %% 2. Calculating grand mean, sst and ssw
 
-
-def get_score(nums: tuple):
-    return nums[0] * nums[1]
-
-
-marj = marj.reset_index("marijUse")
-marj["score"] = marj.apply(get_score, axis=1)
-marj_means = marj.groupby(marj.index)["score"].mean()
-grand_mean = marj_means.mean()
-grand_mean
-# %%
-(marj_means - grand_mean) ** 2
-# %%
-marj_ind = pd.read_csv(MARJ_IND_LOC)
-marj_means = marj_ind.groupby("marijUse").mean()
-grand_mean = marj_means.mean()
-grand_mean
-# %%
 grand_mean = marj_ind["party"].mean()
 marj_ind["squared_error"] = (marj_ind["party"] - grand_mean) ** 2
 
@@ -72,6 +38,7 @@ marj_ind["variance_within"] = marj_ind.groupby("marijUse")["party"].apply(
 ssw = marj_ind["variance_within"].sum()
 ssw
 
+# %% 3. Calculating ssb
 ssb = (
     ((marj_ind.groupby("marijUse")["party"].mean() - grand_mean) ** 2)
     * marj_ind.groupby("marijUse")["party"].count()
@@ -80,9 +47,7 @@ ssb
 
 ssb = sst - ssw
 
-# %% Hypothesis testing
-# H0 = Population means are equal
-# H1 = Not all population means are equal
+# %% 4. F statistic
 
 num_groups = marj_ind["marijUse"].nunique()
 num_observations = len(marj_ind)
@@ -93,14 +58,14 @@ dof_between_groups = num_groups - 1
 f_statistic = (ssb / dof_between_groups) / (ssw / dof_within)
 f_statistic
 
-# %%
-import scipy.stats
+# %% 5. Hypothesis testing
+# H0 = Population means are equal
+# H1 = Not all population means are equal
 
-# find F critical value
 f_critical = scipy.stats.f.ppf(q=1 - 0.05, dfn=dof_between_groups, dfd=dof_within)
 f_critical
 
 if f_statistic > f_critical:
-    print("reject H0")
+    print("Reject H0, thus, not all population means are equal.")
 else:
-    print("cannot reject H0")
+    print("Cannot reject that all population means are equal")
