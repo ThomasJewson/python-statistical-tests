@@ -69,3 +69,9 @@ if f_statistic > f_critical:
     print("Reject H0, thus, not all population means are equal.")
 else:
     print("Cannot reject that all population means are equal")
+
+
+# %% Distribution diagram from Wikipedia
+import seaborn as sns
+
+sns.violinplot(x="party", data=marj_ind)
