@@ -75,3 +75,5 @@ else:
 import seaborn as sns
 
 sns.violinplot(x="party", data=marj_ind)
+
+# %%
